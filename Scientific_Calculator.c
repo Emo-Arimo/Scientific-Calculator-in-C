@@ -17,7 +17,7 @@ double toDegrees(double x)
 
 long double factorial(int n) 
 {
-    if (n < 0) return -1.0; // Error
+    if (n < 0) return -1.0;
     if (n == 0 || n == 1) return 1.0;
     long double result = 1.0L;
     for (int i = 2; i <= n; i++) 
@@ -26,8 +26,6 @@ long double factorial(int n)
     }
     return result;
 }
-
-// ================= BASIC =================
 
 void basicMenu() 
 {
@@ -103,8 +101,6 @@ void basicMenu()
     }
 }
 
-// ================= TRIGONOMETRY =================
-
 void trigonometry() 
 {
     int choice;
@@ -158,8 +154,6 @@ void trigonometry()
     }
 }
 
-// ================= HYPERBOLIC =================
-
 void hyperbolic() 
 {
     int choice;
@@ -203,8 +197,6 @@ void hyperbolic()
         printf("Result = %.4lf\n", result);
     }
 }
-
-// ================= EXPONENTIATION =================
 
 void exponentiation() 
 {
@@ -251,7 +243,7 @@ void exponentiation()
                     printf("Error: Non-positive input!\n");
                     continue;
                 }
-                result = log10(a); // Base-10 logarithm
+                result = log10(a); 
                 break;
             case 5:
                 printf("Enter number: ");
@@ -271,8 +263,6 @@ void exponentiation()
         printf("Result = %.4lf\n", result);
     }
 }
-
-// ================= COMBINATORIAL =================
 
 void combinatorial() 
 {
@@ -364,15 +354,13 @@ void combinatorial()
     }
 }
 
-// ================= ADVANCED =================
-
 void advancedMenu() 
 {
     int choice;
     while (1) 
     {
         printf("\n--- ADVANCED CALCULATIONS ---\n");
-        printf("1.Trigonometry\n2.Hyperbolic\n3.Exponentiation\n4 combinatorial\n5.Toggle Degree/Radian\n0.Back\n");
+        printf("1.Trigonometry\n2.Hyperbolic\n3.Exponentiation\n4.Combinatorial\n5.Toggle Degree/Radian\n0.Back\n");
         printf("Enter choice: ");
         scanf("%d", &choice);
         if (choice == 0) return;
@@ -392,8 +380,6 @@ void advancedMenu()
     }
 }
 
-// ================= MAIN =================
-
 int main() 
 {
     int choice;
@@ -401,7 +387,7 @@ int main()
     {
         printf("\n===== MAIN MENU =====\n");
         printf("1.Basic Calculations\n2.Advanced Calculations\n");
-        printf("3.Show Last Result\n0.Exit\n");
+        printf("3.Show Last Result\n4.GUI Calculator\n0.Exit\n");
         printf("Enter choice: ");
         if (scanf("%d", &choice) != 1) 
         {
@@ -414,6 +400,10 @@ int main()
             case 2: advancedMenu(); break;
             case 3:
                 printf("Last Result = %.4lf\n", lastResult);
+                break;
+            case 4:
+                printf("Launching GUI Calculator...\n");
+                system("GUI_Calculator.exe");
                 break;
             case 0:
                 printf("Exiting...\n");

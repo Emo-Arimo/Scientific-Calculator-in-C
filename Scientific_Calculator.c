@@ -5,8 +5,6 @@
 int degreeMode = 0;
 double lastResult = 0;
 
-// ================= HELPER =================
-
 double toRadians(double x) 
 {
     return (degreeMode ? x * PI / 180.0 : x);

@@ -84,15 +84,4 @@ Supports both **Degree** and **Radian** modes.
 - Win32 API
 - Windows GDI
 - Custom Owner-Drawn Controls
-
----
-
-# 📂 Project Structure
-
-```text
-Project/
-│
-├── GUI_Calculator.c
-├── build_and_run.bat
-├── README.md
-└── assets/
+  

@@ -5,6 +5,8 @@
 int degreeMode = 0;
 double lastResult = 0;
 
+// ================= HELPER =================
+
 double toRadians(double x) 
 {
     return (degreeMode ? x * PI / 180.0 : x);
@@ -17,7 +19,7 @@ double toDegrees(double x)
 
 long double factorial(int n) 
 {
-    if (n < 0) return -1.0;
+    if (n < 0) return -1.0; // Error
     if (n == 0 || n == 1) return 1.0;
     long double result = 1.0L;
     for (int i = 2; i <= n; i++) 
@@ -26,6 +28,8 @@ long double factorial(int n)
     }
     return result;
 }
+
+// ================= BASIC =================
 
 void basicMenu() 
 {
@@ -101,6 +105,8 @@ void basicMenu()
     }
 }
 
+// ================= TRIGONOMETRY =================
+
 void trigonometry() 
 {
     int choice;
@@ -154,6 +160,8 @@ void trigonometry()
     }
 }
 
+// ================= HYPERBOLIC =================
+
 void hyperbolic() 
 {
     int choice;
@@ -197,6 +205,8 @@ void hyperbolic()
         printf("Result = %.4lf\n", result);
     }
 }
+
+// ================= EXPONENTIATION =================
 
 void exponentiation() 
 {
@@ -243,7 +253,7 @@ void exponentiation()
                     printf("Error: Non-positive input!\n");
                     continue;
                 }
-                result = log10(a); 
+                result = log10(a); // Base-10 logarithm
                 break;
             case 5:
                 printf("Enter number: ");
@@ -263,6 +273,9 @@ void exponentiation()
         printf("Result = %.4lf\n", result);
     }
 }
+
+
+// ================= COMBINATORIAL =================
 
 void combinatorial() 
 {
@@ -354,6 +367,8 @@ void combinatorial()
     }
 }
 
+// ================= ADVANCED =================
+
 void advancedMenu() 
 {
     int choice;
@@ -379,6 +394,8 @@ void advancedMenu()
         }
     }
 }
+
+// ================= MAIN =================
 
 int main() 
 {

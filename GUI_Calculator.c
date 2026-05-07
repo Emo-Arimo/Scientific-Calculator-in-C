@@ -7,20 +7,19 @@
 
 #define PI 3.141592653589793
 
-// Color scheme
-#define COLOR_BG RGB(15, 20, 40)
-#define COLOR_DISPLAY_BG RGB(25, 35, 70)
-#define COLOR_DISPLAY_TEXT RGB(235, 245, 255)
+#define COLOR_BG RGB(10, 10, 20)
+#define COLOR_DISPLAY_BG RGB(20, 25, 50)
+#define COLOR_DISPLAY_TEXT RGB(0, 255, 200)
 #define COLOR_TEXT RGB(235, 245, 255)
-#define COLOR_NUMBER RGB(55, 70, 110)
-#define COLOR_OPERATOR RGB(220, 140, 70)
-#define COLOR_FUNCTION RGB(110, 90, 180)
-#define COLOR_EQUALS RGB(70, 190, 150)
-#define COLOR_CE RGB(210, 70, 70)
-#define COLOR_MODE RGB(100, 180, 210)
+#define COLOR_NUMBER RGB(30, 40, 80)
+#define COLOR_OPERATOR RGB(255, 120, 0)
+#define COLOR_FUNCTION RGB(140, 0, 255)
+#define COLOR_EQUALS RGB(0, 255, 120)
+#define COLOR_CE RGB(255, 50, 50)
+#define COLOR_MODE RGB(0, 180, 255)
 #define COLOR_BUTTON_TEXT RGB(255, 255, 255)
-#define COLOR_BUTTON_BORDER RGB(40, 60, 90)
-#define COLOR_BUTTON_HIGHLIGHT RGB(190, 210, 230)
+#define COLOR_BUTTON_BORDER RGB(0, 255, 200)
+#define COLOR_BUTTON_HIGHLIGHT RGB(0, 255, 200)
 
 // Button IDs
 #define BTN_0 1000
@@ -258,41 +257,69 @@ COLORREF GetButtonColor(int id) {
 }
 
 void DrawRoundedButton(LPDRAWITEMSTRUCT pdis) {
+
     COLORREF baseColor = GetButtonColor(pdis->CtlID);
+
     if (pdis->itemState & ODS_SELECTED) {
         baseColor = RGB(
-            min(255, GetRValue(baseColor) + 20),
-            min(255, GetGValue(baseColor) + 20),
-            min(255, GetBValue(baseColor) + 20));
+            min(255, GetRValue(baseColor) + 50),
+            min(255, GetGValue(baseColor) + 50),
+            min(255, GetBValue(baseColor) + 50));
     }
 
     RECT btnRect = pdis->rcItem;
+
+    // Background
     HBRUSH hBackground = CreateSolidBrush(COLOR_BG);
     FillRect(pdis->hDC, &btnRect, hBackground);
     DeleteObject(hBackground);
 
+    // Main button fill
     HBRUSH hBrush = CreateSolidBrush(baseColor);
     HPEN hPen = CreatePen(PS_SOLID, 1, COLOR_BUTTON_BORDER);
+
     HBRUSH oldBrush = SelectObject(pdis->hDC, hBrush);
     HPEN oldPen = SelectObject(pdis->hDC, hPen);
 
     int w = btnRect.right - btnRect.left;
     int h = btnRect.bottom - btnRect.top;
     int radius = 14;
+
+    // Main rounded button
     RoundRect(pdis->hDC, 0, 0, w, h, radius, radius);
 
+    // ===== NEON GLOW BORDER =====
+    HPEN glowPen = CreatePen(PS_SOLID, 2, COLOR_BUTTON_HIGHLIGHT);
+    HPEN oldGlow = SelectObject(pdis->hDC, glowPen);
+
+    RoundRect(pdis->hDC, 1, 1, w - 1, h - 1, radius, radius);
+
+    SelectObject(pdis->hDC, oldGlow);
+    DeleteObject(glowPen);
+
+    // Restore old objects
     SelectObject(pdis->hDC, oldBrush);
     SelectObject(pdis->hDC, oldPen);
+
     DeleteObject(hBrush);
     DeleteObject(hPen);
 
+    // Button text
     RECT textRect = pdis->rcItem;
+
     char buttonText[64] = {0};
     GetWindowTextA((HWND)pdis->hwndItem, buttonText, sizeof(buttonText));
 
     SetTextColor(pdis->hDC, COLOR_BUTTON_TEXT);
     SetBkMode(pdis->hDC, TRANSPARENT);
-    DrawTextA(pdis->hDC, buttonText, -1, &textRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+    DrawTextA(
+        pdis->hDC,
+        buttonText,
+        -1,
+        &textRect,
+        DT_CENTER | DT_VCENTER | DT_SINGLELINE
+    );
 }
 
 HWND CreateCalcButton(HWND hwnd, HINSTANCE hinst, const char *text, int id, int x, int y, int w, int h) {
@@ -315,49 +342,51 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     case WM_CREATE: {
         CREATESTRUCTA* cs = (CREATESTRUCTA*)lParam;
         hinst = cs->hInstance;
+        HRGN hRgn = CreateRoundRectRgn(0, 0, 760, 720, 25, 25);
+        SetWindowRgn(hwnd, hRgn, TRUE);
 
         degreeMode = 0;
 
-        g_displayFont = CreateFontA(30, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        g_displayFont = CreateFontA(50, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
             ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-            DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            CLEARTYPE_QUALITY, DEFAULT_PITCH, "Bahnschrift SemiBold");
 
-        g_btnFont = CreateFontA(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        g_btnFont = CreateFontA(30, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
             ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-            DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
 
         g_expressionDisplay = CreateWindowA("STATIC", "",
-            WS_CHILD | WS_VISIBLE | WS_BORDER | SS_LEFTNOWORDWRAP,
-            10, 10, 500, 35,
+            WS_CHILD | WS_VISIBLE | WS_BORDER | SS_RIGHT | SS_CENTERIMAGE,
+            20, 15, 700, 55,
             hwnd, (HMENU)DISPLAY_EXPRESSION, hinst, NULL);
 
         g_resultDisplay = CreateWindowA("STATIC", "",
-            WS_CHILD | WS_VISIBLE | WS_BORDER | SS_LEFTNOWORDWRAP,
-            10, 52, 500, 60,
+            WS_CHILD | WS_VISIBLE | WS_BORDER | SS_RIGHT | SS_CENTERIMAGE,
+            20, 65, 700, 85,
             hwnd, (HMENU)DISPLAY_RESULT, hinst, NULL);
 
         SendMessageA(g_expressionDisplay, WM_SETFONT, (WPARAM)g_displayFont, TRUE);
         SendMessageA(g_resultDisplay, WM_SETFONT, (WPARAM)g_displayFont, TRUE);
 
-        int btnX = 10;
-        int btnY = 125;
-        int btnW = 65;
-        int btnH = 65;
-        int gap = 8;
+        int btnX = 20;
+        int btnY = 190;
+        int btnW = 90;
+        int btnH = 75;
+        int gap = 10;
 
-        CreateCalcButton(hwnd, hinst, "C", BTN_CLEAR, btnX + (btnW + gap) * 0, btnY, btnW, btnH);
-        CreateCalcButton(hwnd, hinst, "asinh", BTN_ASINH, btnX + (btnW + gap) * 1, btnY, btnW, btnH);
-        CreateCalcButton(hwnd, hinst, "acosh", BTN_ACOSH, btnX + (btnW + gap) * 2, btnY, btnW, btnH);
-        CreateCalcButton(hwnd, hinst, "atanh", BTN_ATANH, btnX + (btnW + gap) * 3, btnY, btnW, btnH);
-        CreateCalcButton(hwnd, hinst, "*", BTN_MUL, btnX + (btnW + gap) * 4, btnY, btnW, btnH);
-        CreateCalcButton(hwnd, hinst, "/", BTN_DIV, btnX + (btnW + gap) * 5, btnY, btnW, btnH);
-        CreateCalcButton(hwnd, hinst, "Off", BTN_OFF, btnX + (btnW + gap) * 6, btnY, btnW, btnH);
+        CreateCalcButton(hwnd, hinst, "CE", BTN_CLEAR, btnX + (btnW + gap) * 0, btnY, btnW, btnH);
+        CreateCalcButton(hwnd, hinst, "MODE", BTN_DEG_RAD, btnX + (btnW + gap) * 1, btnY, btnW, btnH);
+        CreateCalcButton(hwnd, hinst, "nPr", BTN_PERM, btnX + (btnW + gap) * 2, btnY, btnW, btnH);
+        CreateCalcButton(hwnd, hinst, "nCr", BTN_COMB, btnX + (btnW + gap) * 3, btnY, btnW, btnH);
+        CreateCalcButton(hwnd, hinst, "log", BTN_LOG, btnX + (btnW + gap) * 4, btnY, btnW, btnH);
+        CreateCalcButton(hwnd, hinst, "ln", BTN_LN, btnX + (btnW + gap) * 5, btnY, btnW, btnH);
+        CreateCalcButton(hwnd, hinst, "OFF", BTN_OFF, btnX + (btnW + gap) * 6, btnY, btnW, btnH);
 
         btnY += btnH + gap;
         CreateCalcButton(hwnd, hinst, "7", BTN_7, btnX + (btnW + gap) * 0, btnY, btnW, btnH);
         CreateCalcButton(hwnd, hinst, "8", BTN_8, btnX + (btnW + gap) * 1, btnY, btnW, btnH);
         CreateCalcButton(hwnd, hinst, "9", BTN_9, btnX + (btnW + gap) * 2, btnY, btnW, btnH);
-        CreateCalcButton(hwnd, hinst, "-", BTN_MINUS, btnX + (btnW + gap) * 3, btnY, btnW, btnH);
+        CreateCalcButton(hwnd, hinst, "/", BTN_DIV, btnX + (btnW + gap) * 3, btnY, btnW, btnH);
         CreateCalcButton(hwnd, hinst, "sin", BTN_SIN, btnX + (btnW + gap) * 4, btnY, btnW, btnH);
         CreateCalcButton(hwnd, hinst, "cos", BTN_COS, btnX + (btnW + gap) * 5, btnY, btnW, btnH);
         CreateCalcButton(hwnd, hinst, "tan", BTN_TAN, btnX + (btnW + gap) * 6, btnY, btnW, btnH);
@@ -366,7 +395,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         CreateCalcButton(hwnd, hinst, "4", BTN_4, btnX + (btnW + gap) * 0, btnY, btnW, btnH);
         CreateCalcButton(hwnd, hinst, "5", BTN_5, btnX + (btnW + gap) * 1, btnY, btnW, btnH);
         CreateCalcButton(hwnd, hinst, "6", BTN_6, btnX + (btnW + gap) * 2, btnY, btnW, btnH);
-        CreateCalcButton(hwnd, hinst, "+", BTN_PLUS, btnX + (btnW + gap) * 3, btnY, btnW, btnH);
+        CreateCalcButton(hwnd, hinst, "*", BTN_MUL, btnX + (btnW + gap) * 3, btnY, btnW, btnH);
         CreateCalcButton(hwnd, hinst, "asin", BTN_ASIN, btnX + (btnW + gap) * 4, btnY, btnW, btnH);
         CreateCalcButton(hwnd, hinst, "acos", BTN_ACOS, btnX + (btnW + gap) * 5, btnY, btnW, btnH);
         CreateCalcButton(hwnd, hinst, "atan", BTN_ATAN, btnX + (btnW + gap) * 6, btnY, btnW, btnH);
@@ -375,19 +404,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         CreateCalcButton(hwnd, hinst, "1", BTN_1, btnX + (btnW + gap) * 0, btnY, btnW, btnH);
         CreateCalcButton(hwnd, hinst, "2", BTN_2, btnX + (btnW + gap) * 1, btnY, btnW, btnH);
         CreateCalcButton(hwnd, hinst, "3", BTN_3, btnX + (btnW + gap) * 2, btnY, btnW, btnH);
-        CreateCalcButton(hwnd, hinst, "=", BTN_EQUAL, btnX + (btnW + gap) * 3, btnY, btnW, btnH);
-        CreateCalcButton(hwnd, hinst, "log", BTN_LOG, btnX + (btnW + gap) * 4, btnY, btnW, btnH);
-        CreateCalcButton(hwnd, hinst, "ln", BTN_LN, btnX + (btnW + gap) * 5, btnY, btnW, btnH);
-        CreateCalcButton(hwnd, hinst, "sinh", BTN_SINH, btnX + (btnW + gap) * 6, btnY, btnW, btnH);
+        CreateCalcButton(hwnd, hinst, "-", BTN_MINUS, btnX + (btnW + gap) * 3, btnY, btnW, btnH);
+        CreateCalcButton(hwnd, hinst, "sinh", BTN_SINH, btnX + (btnW + gap) * 4, btnY, btnW, btnH);
+        CreateCalcButton(hwnd, hinst, "cosh", BTN_COSH, btnX + (btnW + gap) * 5, btnY, btnW, btnH);
+        CreateCalcButton(hwnd, hinst, "tanh", BTN_TANH, btnX + (btnW + gap) * 6, btnY, btnW, btnH);
 
         btnY += btnH + gap;
         CreateCalcButton(hwnd, hinst, "0", BTN_0, btnX + (btnW + gap) * 0, btnY, btnW, btnH);
         CreateCalcButton(hwnd, hinst, ".", BTN_DOT, btnX + (btnW + gap) * 1, btnY, btnW, btnH);
-        CreateCalcButton(hwnd, hinst, "cosh", BTN_COSH, btnX + (btnW + gap) * 2, btnY, btnW, btnH);
-        CreateCalcButton(hwnd, hinst, "tanh", BTN_TANH, btnX + (btnW + gap) * 3, btnY, btnW, btnH);
-        CreateCalcButton(hwnd, hinst, "P", BTN_PERM, btnX + (btnW + gap) * 4, btnY, btnW, btnH);
-        CreateCalcButton(hwnd, hinst, "C", BTN_COMB, btnX + (btnW + gap) * 5, btnY, btnW, btnH);
-        CreateCalcButton(hwnd, hinst, "MODE", BTN_DEG_RAD, btnX + (btnW + gap) * 6, btnY, btnW, btnH);
+        CreateCalcButton(hwnd, hinst, "=", BTN_EQUAL, btnX + (btnW + gap) * 2, btnY, btnW, btnH);
+        CreateCalcButton(hwnd, hinst, "+", BTN_PLUS, btnX + (btnW + gap) * 3, btnY, btnW, btnH);
+        CreateCalcButton(hwnd, hinst, "asinh", BTN_ASINH, btnX + (btnW + gap) * 4, btnY, btnW, btnH);
+        CreateCalcButton(hwnd, hinst, "acosh", BTN_ACOSH, btnX + (btnW + gap) * 5, btnY, btnW, btnH);
+        CreateCalcButton(hwnd, hinst, "atanh", BTN_ATANH, btnX + (btnW + gap) * 6, btnY, btnW, btnH);
 
         break;
     }
@@ -878,15 +907,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     }
 
     case WM_CTLCOLORSTATIC: {
-        HDC hdc = (HDC)wParam;
-        HWND ctrl = (HWND)lParam;
-        if (ctrl == g_expressionDisplay || ctrl == g_resultDisplay) {
-            SetBkColor(hdc, COLOR_DISPLAY_BG);
-            SetTextColor(hdc, COLOR_DISPLAY_TEXT);
-            return (LRESULT)CreateSolidBrush(COLOR_DISPLAY_BG);
-        }
-        return DefWindowProcA(hwnd, msg, wParam, lParam);
+    HDC hdc = (HDC)wParam;
+    HWND ctrl = (HWND)lParam;
+
+    static HBRUSH hDisplayBrush = NULL;
+
+    if (!hDisplayBrush) {
+        hDisplayBrush = CreateSolidBrush(COLOR_DISPLAY_BG);
     }
+
+    if (ctrl == g_expressionDisplay || ctrl == g_resultDisplay) {
+        SetBkColor(hdc, COLOR_DISPLAY_BG);
+        SetTextColor(hdc, COLOR_DISPLAY_TEXT);
+        return (LRESULT)hDisplayBrush;
+    }
+
+    return DefWindowProcA(hwnd, msg, wParam, lParam);
+}
 
     case WM_DRAWITEM: {
         LPDRAWITEMSTRUCT pdis = (LPDRAWITEMSTRUCT)lParam;
@@ -934,7 +971,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrev, LPSTR lpCmd, int nShow)
 
     HWND hwnd = CreateWindowA("CalcApp", "Calculator v1.0",
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
-        200, 100, 560, 620,
+        200, 100, 760, 720,
         NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, nShow);
